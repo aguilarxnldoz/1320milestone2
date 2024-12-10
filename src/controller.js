@@ -1,11 +1,21 @@
 const fs = require("fs");
+const http = require("node:http");
 const { DEFAULT_HEADER } = require("./util/util");
 const path = require("path");
 var qs = require("querystring");
+const data = require("../database/data.json");
+const ejs = require("ejs");
+const { formidable, formidableErrors } = require("formidable");
 
 const controller = {
-  getFormPage: (request, response) => {
-    return response.end(`
+    getHomePage: async (req, res) => {
+        const file = path.join(__dirname, "index.ejs");
+        const contents = await ejs.renderFile(file, { data: data });
+        return res.end(contents);
+    },
+
+    getFormPage: (request, response) => {
+        return response.end(`
     <h1>Hello world</h1> <style> h1 {color:red;}</style>
     <form action="/form" method="post">
     <input type="text" name="username"><br>
@@ -13,23 +23,23 @@ const controller = {
     <input type="submit" value="Upload">
     </form>
     `);
-  },
-  sendFormData: (request, response) => {
-    var body = "";
+    },
+    sendFormData: (request, response) => {
+        var body = "";
 
-    request.on("data", function (data) {
-      body += data;
-    });
+        request.on("data", function (data) {
+            body += data;
+        });
 
-    request.on("end", function () {
-      var post = qs.parse(body);
-      console.log(post);
-    });
-  },
+        request.on("end", function () {
+            var post = qs.parse(body);
+            console.log(post);
+        });
+    },
 
-  getFeed: (request, response) => {
-    // console.log(request.url); try: http://localhost:3000/feed?username=john123
-    response.write(`
+    getFeed: (request, response) => {
+        // console.log(request.url); try: http://localhost:3000/feed?username=john123
+        response.write(`
     <html>
     <head>
     <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css">
@@ -680,10 +690,62 @@ const controller = {
 </body>
 </html>
     `);
-    response.end();
-  },
+        response.end();
+    },
 
-  uploadImages: (request, response) => {},
+    // // NOT WORKING --------------
+
+    uploadImages: async (req, res) => {
+        let fields;
+        let files;
+        const form = formidable({
+            uploadDir: `photos/${[]}`,
+            keepExtensions: true,
+        });
+        try {
+            [fields, files] = await form.parse(req);
+        } catch (err) {
+            console.error(err);
+            res.writeHead(err.httpCode || 400, {
+                "Content-Type": "text/plain",
+            });
+            res.end(String(err));
+            return;
+        }
+        const username = fields.username;
+        console.log(username);
+
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ fields, files }, null, 2));
+        return;
+    },
 };
+
+//     uploadImages: async (req, res) => {
+//         let fields;
+//         let files;
+//         let username = [ await formidable({ uploadDir: `photos/${[fields]}`, keepExtensions: true, }).parse(req),][0][0].username[0];
+//         const form = formidable({
+//             uploadDir: `photos/${username}`,
+//             keepExtensions: true,
+//         });
+
+//         try {
+//             [fields, files] = await form.parse(req);
+//             console.log([fields, files]);
+//         } catch (err) {
+//             console.error(err);
+//             res.writeHead(err.httpCode || 400, {
+//                 "Content-Type": "text/plain",
+//             });
+//             res.end(String(err));
+//             return;
+//         }
+
+//         res.writeHead(200, { "Content-Type": "application/json" });
+//         res.end(JSON.stringify({ fields, files }, null, 2));
+//         return;
+//     },
+// };
 
 module.exports = controller;

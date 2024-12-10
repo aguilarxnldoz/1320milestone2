@@ -4,14 +4,14 @@
   "description": "Milestone 2",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/index.js"
+    "start": "node --watch src/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ejs": "^3.1.9",
-    "formidable": "^3.5.1",
+    "ejs": "^3.1.10",
+    "formidable": "^3.5.2",
     "nodemon": "^3.1.7"
   }
 }

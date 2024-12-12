@@ -3,32 +3,79 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
+        <title>Home Page</title>
+        <style>
+            ul {
+                list-style-type: none;
+                font-size: 1.5rem;
+            }
+            li {
+                background-color: black;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                width: 25%;
+                text-align: center;
+                height: 30px;
+                margin: 0.5rem;
+            }
+
+            li a {
+                text-decoration: none;
+                font-weight: 600;
+                color: white;
+            }
+
+            input {
+                visibility: hidden;
+            }
+
+            label {
+                color: white;
+                font-weight: 700;
+                text-align: center;
+            }
+
+            img {
+                width: 5%;
+                height: auto;
+                border-radius: 4rem;
+            }
+
+            ul {
+                display: inline-block;
+            }
+        </style>
     </head>
+
     <body>
         <% data.forEach(user => { %>
+        <div id="wrapper">
+            <img src="/photos/<%=user.username%>/<%= user.profile %>" />
+            <ul>
+                <li>
+                    <form
+                        action="/images?username=<%= user.username %>"
+                        method="post"
+                        enctype="multipart/form-data"
+                    >
+                        <label for="upload<%= user.username %>">Upload</label>
+                        <input
+                            id="upload<%= user.username %>"
+                            type="file"
+                            name="photo"
+                            accept="image/png, image/jpeg"
+                            onchange="this.form.submit()"
+                        />
+                    </form>
+                </li>
 
-        <form action="/feed" enctype="multipart/form-data" method="get">
-            <label>
-                <%= user.username %>
-                <input type="text" />
-            </label>
-        </form>
-
-        <!-- Upload Button -->
-        <form action="/images" enctype="multipart/form-data" method="post">
-            <label for="fileInput">Upload</label>
-            <input type="hidden" name="username" value="<%=user.username%>" />
-            <input
-                type="file"
-                id="fileInput"
-                name="multipleFiles"
-                multiple="multiple"
-                onchange="this.form.submit()"
-                style="display: none"
-            />
-        </form>
-
+                <li>
+                    <a href="/feed?username=<%= user.username %>"
+                        ><%= user.username %></a
+                    >
+                </li>
+            </ul>
+        </div>
         <% }) %>
     </body>
 </html>

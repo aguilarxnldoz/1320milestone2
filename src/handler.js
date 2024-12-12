@@ -1,7 +1,7 @@
 const { parse } = require("url");
 const { DEFAULT_HEADER } = require("./util/util.js");
 const controller = require("./controller");
-const { createReadStream } = require("fs");
+const { createReadStream, statSync } = require("fs");
 const path = require("path");
 
 const allRoutes = {
@@ -10,14 +10,6 @@ const allRoutes = {
         controller.getHomePage(request, response);
     },
 
-    // GET: localhost:3000/form
-    "/form:get": (request, response) => {
-        controller.getFormPage(request, response);
-    },
-    // POST: localhost:3000/form
-    "/form:post": (request, response) => {
-        controller.sendFormData(request, response);
-    },
     // POST: localhost:3000/images
     "/images:post": (request, response) => {
         console.log("got image");
@@ -25,7 +17,6 @@ const allRoutes = {
         console.log("uploaded image");
     },
 
-    // wanna vc armaan? -stef
     // GET: localhost:3000/feed
     // Shows instagram profile for a given user
     "/feed:get": (request, response) => {
@@ -46,6 +37,10 @@ function handler(request, response) {
     const { url, method } = request;
 
     const { pathname } = parse(url, true);
+
+    if (pathname.startsWith('/photos/')) {
+        return serveStaticFile(request, response, pathname);
+    }
 
     const key = `${pathname}:${method.toLowerCase()}`;
     const chosen = allRoutes[key] || allRoutes.default;
@@ -68,5 +63,30 @@ function handlerError(response) {
         return response.end();
     };
 }
+
+const serveStaticFile = async (request, response, pathname) => {
+    // Remove leading slash to create a relative path
+    const relativePath = pathname.replace(/^\/+/, '');
+    const filePath = path.join(__dirname, relativePath);
+    // Debug Log
+    console.log('Attempting to serve:', filePath);
+
+    try {
+        statSync(filePath);
+    } catch (error) {
+        console.error('statSync error:', error.message);
+        response.writeHead(404, DEFAULT_HEADER);
+        return response.end('File not found');
+    }
+
+    let contentType = 'application/octet-stream';
+    if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+        contentType = 'image/jpeg';
+    } else if (filePath.endsWith('.png')) {
+        contentType = 'image/png';
+    }
+    response.writeHead(200, { 'Content-Type': contentType });
+    createReadStream(filePath).pipe(response);
+};
 
 module.exports = handler;
